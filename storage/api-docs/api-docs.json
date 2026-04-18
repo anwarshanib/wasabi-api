@@ -1,0 +1,1283 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Wasabi Card API",
+        "description": "Backend integration layer for the Wasabi Card Open API platform.\n\n## Authentication\nAll endpoints require an **X-API-KEY** header.\n\n## Response Envelope\nEvery response uses: `{ success, code, msg, data }`\n\n## Rate Limiting\n60 requests per minute per API key.",
+        "contact": {
+            "email": "support@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/",
+            "description": "Current environment"
+        }
+    ],
+    "paths": {
+        "/api/v1/accounts/assets": {
+            "get": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Assets",
+                "description": "Returns all accounts with live balances for the merchant. Data is real-time and never cached. Source: Wasabi Card /merchant/core/mcb/account/info",
+                "operationId": "getAssets",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AccountObject"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/accounts": {
+            "get": {
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Account List",
+                "description": "Returns a paginated list of accounts with optional filters. Data is real-time and never cached. Source: Wasabi Card /merchant/core/mcb/account/list",
+                "operationId": "getAccountList",
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "query",
+                        "description": "Filter by account ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 19847563867367666
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by account type: WALLET (Wallet Account) or MARGIN (Margin Account)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "WALLET",
+                            "enum": [
+                                "WALLET",
+                                "MARGIN"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "Current page number. Default is 1",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "Number of records per page. Default 10, maximum 10",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10,
+                            "maximum": 10,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total": {
+                                                    "description": "Total matching records",
+                                                    "type": "integer",
+                                                    "example": 21
+                                                },
+                                                "records": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/AccountObject"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/common/regions": {
+            "get": {
+                "tags": [
+                    "Common"
+                ],
+                "summary": "Country / Region list",
+                "description": "Returns all supported countries and regions (ISO 3166-1). Response is cached for 24 hours. Source: Wasabi Card /merchant/core/mcb/common/region",
+                "operationId": "getRegions",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "description": "ISO 3166-1 alpha-2",
+                                                        "type": "string",
+                                                        "example": "SG"
+                                                    },
+                                                    "standardCode": {
+                                                        "description": "ISO 3166-1 alpha-3",
+                                                        "type": "string",
+                                                        "example": "SGP"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Singapore"
+                                                    },
+                                                    "enableKyc": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "enableCard": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "enableGlobalTransfer": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/common/cities": {
+            "get": {
+                "tags": [
+                    "Common"
+                ],
+                "summary": "City list",
+                "description": "Returns a flat list of cities. Optionally filter by country/region code (ISO 3166-1 alpha-2). Response is cached for 24 hours. Source: Wasabi Card /merchant/core/mcb/common/city",
+                "operationId": "getCities",
+                "parameters": [
+                    {
+                        "name": "regionCode",
+                        "in": "query",
+                        "description": "Filter by country/region code (ISO 3166-1 alpha-2), e.g. AU",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "AU"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "description": "City code",
+                                                        "type": "string",
+                                                        "example": "AU_01"
+                                                    },
+                                                    "name": {
+                                                        "description": "City name",
+                                                        "type": "string",
+                                                        "example": "Sydney"
+                                                    },
+                                                    "country": {
+                                                        "description": "ISO 3166-1 alpha-2 country code",
+                                                        "type": "string",
+                                                        "example": "AU"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/common/cities/hierarchical": {
+            "get": {
+                "tags": [
+                    "Common"
+                ],
+                "summary": "City list (hierarchical relationship)",
+                "description": "Returns cities grouped in a two-level hierarchy: province/state/region → city. Optionally filter by country/region code. Response is cached for 24 hours. Source: Wasabi Card /merchant/core/mcb/common/v2/city",
+                "operationId": "getCitiesHierarchical",
+                "parameters": [
+                    {
+                        "name": "regionCode",
+                        "in": "query",
+                        "description": "Filter by country/region code (ISO 3166-1 alpha-2), e.g. AU",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "AU"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "description": "Province/state code",
+                                                        "type": "string",
+                                                        "example": "AU-ACT"
+                                                    },
+                                                    "name": {
+                                                        "description": "Province/state name",
+                                                        "type": "string",
+                                                        "example": "Australian Capital Territory"
+                                                    },
+                                                    "parentCode": {
+                                                        "description": "\"0\" for top-level province/state",
+                                                        "type": "string",
+                                                        "example": "0"
+                                                    },
+                                                    "country": {
+                                                        "description": "ISO 3166-1 alpha-2",
+                                                        "type": "string",
+                                                        "example": "AU"
+                                                    },
+                                                    "countryStandardCode": {
+                                                        "description": "ISO 3166-1 alpha-3",
+                                                        "type": "string",
+                                                        "example": "AUS"
+                                                    },
+                                                    "children": {
+                                                        "description": "Cities within this province/state",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "example": "AU-ACT-80100"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Australian Capital Territory (Canberra)"
+                                                                },
+                                                                "parentCode": {
+                                                                    "type": "string",
+                                                                    "example": "AU-ACT"
+                                                                },
+                                                                "country": {
+                                                                    "type": "string",
+                                                                    "example": "AU"
+                                                                },
+                                                                "countryStandardCode": {
+                                                                    "type": "string",
+                                                                    "example": "AUS"
+                                                                },
+                                                                "children": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/common/mobile-codes": {
+            "get": {
+                "tags": [
+                    "Common"
+                ],
+                "summary": "Mobile Code List",
+                "description": "Returns all supported international mobile dialling codes. Response is cached for 24 hours. Source: Wasabi Card /merchant/core/mcb/common/mobileAreaCode",
+                "operationId": "getMobileCodes",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "description": "International dialling code (e.g. +1, +61)",
+                                                        "type": "string",
+                                                        "example": "+1"
+                                                    },
+                                                    "name": {
+                                                        "description": "Country name",
+                                                        "type": "string",
+                                                        "example": "Canada"
+                                                    },
+                                                    "areaCode": {
+                                                        "description": "ISO 3166-1 alpha-2 country code",
+                                                        "type": "string",
+                                                        "example": "CA"
+                                                    },
+                                                    "language": {
+                                                        "description": "Default language locale",
+                                                        "type": "string",
+                                                        "example": "en_US"
+                                                    },
+                                                    "enableGlobalTransfer": {
+                                                        "description": "Whether global transfer is enabled for this country",
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/common/files/upload": {
+            "post": {
+                "tags": [
+                    "Common"
+                ],
+                "summary": "Upload File",
+                "description": "Upload a file and receive a fileId for use in subsequent API calls (e.g. KYC document submission). Supported formats: jpg, jpeg, png, pdf. Maximum size: 2 MB. Source: Wasabi Card /merchant/core/mcb/common/file/upload",
+                "operationId": "uploadFile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "File to upload. Supported formats: jpg, jpeg, png, pdf. Maximum size: 2 MB.",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "File uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "fileId": {
+                                                    "description": "Uploaded file identifier for use in subsequent API calls",
+                                                    "type": "string",
+                                                    "example": "c7bf3c1b-25d1-4b75-b519-1e6bf383d0a7"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (invalid file type or size exceeded)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/work-orders": {
+            "get": {
+                "tags": [
+                    "Work Orders"
+                ],
+                "summary": "Work Order List",
+                "description": "Retrieve a paginated list of work orders with optional filters. Source: Wasabi Card /merchant/core/mcb/work/list",
+                "operationId": "listWorkOrders",
+                "parameters": [
+                    {
+                        "name": "merchantOrderNo",
+                        "in": "query",
+                        "description": "Filter by merchant order reference number",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "13243897979979797999008085"
+                        }
+                    },
+                    {
+                        "name": "orderNo",
+                        "in": "query",
+                        "description": "Filter by Wasabi platform work order number",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "WORK-202508071953472304731676672"
+                        }
+                    },
+                    {
+                        "name": "tradeType",
+                        "in": "query",
+                        "description": "Filter by work order type (e.g. CARD_ACTIVE)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "CARD_ACTIVE"
+                        }
+                    },
+                    {
+                        "name": "tradeStatus",
+                        "in": "query",
+                        "description": "Filter by status: processing, success, failed",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "success"
+                        }
+                    },
+                    {
+                        "name": "pageNo",
+                        "in": "query",
+                        "description": "Page number (1-based)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "Records per page (default 10)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total": {
+                                                    "description": "Total matching records",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "records": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "merchantOrderNo": {
+                                                                "type": "string",
+                                                                "example": "13243897979979797999008085"
+                                                            },
+                                                            "orderNo": {
+                                                                "type": "string",
+                                                                "example": "WORK-202508071953472304731676672"
+                                                            },
+                                                            "title": {
+                                                                "type": "string",
+                                                                "example": "ApplePay"
+                                                            },
+                                                            "target": {
+                                                                "type": "string",
+                                                                "example": "5533700042831234"
+                                                            },
+                                                            "content": {
+                                                                "type": "string",
+                                                                "example": "Active"
+                                                            },
+                                                            "tradeType": {
+                                                                "type": "string",
+                                                                "example": "CARD_ACTIVE"
+                                                            },
+                                                            "tradeStatus": {
+                                                                "type": "string",
+                                                                "example": "success"
+                                                            },
+                                                            "description": {
+                                                                "type": "string",
+                                                                "example": "SUCCESS"
+                                                            },
+                                                            "remark": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "createTime": {
+                                                                "description": "Unix timestamp (ms)",
+                                                                "type": "integer",
+                                                                "example": 1754607865000
+                                                            },
+                                                            "updateTime": {
+                                                                "description": "Unix timestamp (ms)",
+                                                                "type": "integer",
+                                                                "example": 1754648044000
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Work Orders"
+                ],
+                "summary": "Submit Work Order",
+                "description": "Submit a new work order to the Wasabi Card platform (e.g. card activation, dispute). Returns the created work order details. Source: Wasabi Card /merchant/core/mcb/work/submit",
+                "operationId": "submitWorkOrder",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "merchantOrderNo",
+                                    "title",
+                                    "target",
+                                    "content",
+                                    "tradeType"
+                                ],
+                                "properties": {
+                                    "merchantOrderNo": {
+                                        "description": "Merchant's unique order reference number",
+                                        "type": "string",
+                                        "example": "13243897979979797999008085"
+                                    },
+                                    "title": {
+                                        "description": "Short descriptive title for the work order",
+                                        "type": "string",
+                                        "example": "ApplePay"
+                                    },
+                                    "target": {
+                                        "description": "Target identifier — card number or account reference",
+                                        "type": "string",
+                                        "example": "5533700042831234"
+                                    },
+                                    "content": {
+                                        "description": "Detailed content / description of the work order",
+                                        "type": "string",
+                                        "example": "Active"
+                                    },
+                                    "tradeType": {
+                                        "description": "Work order type (e.g. CARD_ACTIVE)",
+                                        "type": "string",
+                                        "example": "CARD_ACTIVE"
+                                    },
+                                    "remark": {
+                                        "description": "Optional supplementary notes",
+                                        "type": "string",
+                                        "example": null,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Work order submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "merchantOrderNo": {
+                                                    "description": "Merchant order reference",
+                                                    "type": "string",
+                                                    "example": "13243897979979797999008085"
+                                                },
+                                                "orderNo": {
+                                                    "description": "Wasabi platform work order number",
+                                                    "type": "string",
+                                                    "example": "WORK-2025080719534"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "ApplePay"
+                                                },
+                                                "target": {
+                                                    "type": "string",
+                                                    "example": "5533700042831234"
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "example": "Active"
+                                                },
+                                                "tradeType": {
+                                                    "type": "string",
+                                                    "example": "CARD_ACTIVE"
+                                                },
+                                                "tradeStatus": {
+                                                    "description": "Current status: processing, success, failed",
+                                                    "type": "string",
+                                                    "example": "processing"
+                                                },
+                                                "remark": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "createTime": {
+                                                    "description": "Unix timestamp (ms)",
+                                                    "type": "integer",
+                                                    "example": 1754607865000
+                                                },
+                                                "updateTime": {
+                                                    "description": "Unix timestamp (ms)",
+                                                    "type": "integer",
+                                                    "example": 1754648044000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AccountObject": {
+                "description": "A single merchant account with live balance information",
+                "properties": {
+                    "accountId": {
+                        "description": "Unique account identifier",
+                        "type": "string",
+                        "example": "19847563867367666"
+                    },
+                    "accountName": {
+                        "description": "Account display name",
+                        "type": "string",
+                        "example": "wallet9023"
+                    },
+                    "accountType": {
+                        "description": "Account type (e.g. WALLET, MARGIN)",
+                        "type": "string",
+                        "example": "WALLET"
+                    },
+                    "currency": {
+                        "description": "ISO 4217 currency code",
+                        "type": "string",
+                        "example": "USD"
+                    },
+                    "totalBalance": {
+                        "description": "Total balance including frozen funds",
+                        "type": "number",
+                        "example": 100
+                    },
+                    "availableBalance": {
+                        "description": "Spendable balance",
+                        "type": "number",
+                        "example": 100
+                    },
+                    "frozenBalance": {
+                        "description": "Frozen / reserved balance",
+                        "type": "number",
+                        "example": 0
+                    },
+                    "digital": {
+                        "description": "Number of decimal places for the currency",
+                        "type": "integer",
+                        "example": 2
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "code": {
+                        "type": "integer",
+                        "example": 401
+                    },
+                    "msg": {
+                        "type": "string",
+                        "example": "Invalid or missing API key."
+                    },
+                    "data": {
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "description": "API key issued to third-party developers.",
+                "name": "X-API-KEY",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Common",
+            "description": "Reference data — regions, cities, mobile codes, file upload"
+        },
+        {
+            "name": "Work Orders",
+            "description": "Work order management — submit and query Wasabi platform work orders"
+        },
+        {
+            "name": "Account",
+            "description": "Account management — assets and account list"
+        }
+    ]
+}
