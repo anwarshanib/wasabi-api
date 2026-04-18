@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\CardController;
+use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CommonController;
 use App\Http\Controllers\Api\V1\WalletController;
+use App\Http\Controllers\Api\V1\WebhookEventController;
 use App\Http\Controllers\Api\V1\WorkOrderController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +22,20 @@ use Illuminate\Support\Facades\Route;
 | Upstream: Wasabi Card Open API  (sandbox-api-merchant.wasabicard.com)
 | Consumer: Third-party clients   (authenticated via X-API-KEY header)
 */
+
+/*
+|--------------------------------------------------------------------------
+| Wasabi Webhook Receiver
+|--------------------------------------------------------------------------
+| This endpoint receives async event notifications from Wasabi Card.
+| It is intentionally outside the api.auth middleware — Wasabi does not
+| send our X-API-KEY. Instead, the X-WSB-SIGNATURE RSA header is verified
+| inside WebhookController to authenticate the request.
+|
+| Register this URL in the Wasabi merchant dashboard:
+|   Account Settings → webhookUrl → https://yourdomain.com/api/webhook
+*/
+Route::post('webhook', [WebhookController::class, 'receive']);
 
 Route::prefix('v1')
     ->middleware(['api.auth', 'throttle:client'])
@@ -104,6 +121,28 @@ Route::prefix('v1')
             Route::post('create',      [AccountController::class, 'createSharedAccount']);
             Route::post('transfer',    [AccountController::class, 'fundTransfer']);
             Route::get('/',            [AccountController::class, 'accountList']);
+        });
+
+        /*
+        |----------------------------------------------------------------------
+        | WEBHOOK EVENTS — Poll stored Wasabi async event results
+        |----------------------------------------------------------------------
+        */
+        Route::get('webhook-events', [WebhookEventController::class, 'index']);
+
+        /*
+        |----------------------------------------------------------------------
+        | CARDHOLDER — Cardholder management
+        |----------------------------------------------------------------------
+        */
+        Route::prefix('cardholders')->group(function (): void {
+            Route::post('occupations',  [CardholderController::class, 'occupations']);
+            Route::post('create',       [CardholderController::class, 'createCardholderDeprecated']);
+            Route::post('update',       [CardholderController::class, 'updateCardholderDeprecated']);
+            Route::post('create-v2',    [CardholderController::class, 'createCardholderV2']);
+            Route::post('update-v2',    [CardholderController::class, 'updateCardholderV2']);
+            Route::post('list',         [CardholderController::class, 'cardholderList']);
+            Route::post('update-email', [CardholderController::class, 'updateCardholderEmail']);
         });
 
     });

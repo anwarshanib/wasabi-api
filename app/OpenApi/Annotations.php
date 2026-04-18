@@ -25,6 +25,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Account',     description: 'Account management — assets and account list')]
 #[OA\Tag(name: 'Wallet',      description: 'Wallet management — deposit orders and transaction history (Deprecated endpoints)')]
 #[OA\Tag(name: 'Card',        description: 'Card management — card types, create and manage cards')]
+#[OA\Tag(name: 'Cardholder',     description: 'Cardholder management — create, update and list cardholders')]
+#[OA\Tag(name: 'Webhook Events', description: 'Webhook event log — poll for async final results pushed by Wasabi Card')]
 #[OA\Schema(
     schema: 'AccountObject',
     description: 'A single merchant account with live balance information',

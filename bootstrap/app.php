@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\WasabiApiException;
+use App\Http\Middleware\AdminAuthentication;
 use App\Http\Middleware\ApiKeyAuthentication;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -20,14 +21,23 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'api.auth' => ApiKeyAuthentication::class,
+            'api.auth'   => ApiKeyAuthentication::class,
+            'admin.auth' => AdminAuthentication::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Force JSON for all responses — this is an API-only application
-        $exceptions->shouldRenderJsonWhen(fn (Request $request, \Throwable $e): bool => true);
+        // Force JSON for API routes only — admin panel uses Blade/redirects
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request, \Throwable $e): bool => str_starts_with($request->path(), 'api/')
+        );
 
-        $exceptions->render(function (WasabiApiException $e): \Illuminate\Http\JsonResponse {
+        // Each render callback returns null for non-API requests so Laravel
+        // falls through to its default HTML/redirect handling (admin panel).
+        $exceptions->render(function (WasabiApiException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+            if (! str_starts_with($request->path(), 'api/')) {
+                return null;
+            }
+
             return response()->json([
                 'success' => false,
                 'code'    => $e->getCode(),
@@ -36,7 +46,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $e->getHttpStatus());
         });
 
-        $exceptions->render(function (ValidationException $e): \Illuminate\Http\JsonResponse {
+        $exceptions->render(function (ValidationException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+            if (! str_starts_with($request->path(), 'api/')) {
+                return null;
+            }
+
             return response()->json([
                 'success' => false,
                 'code'    => 422,
@@ -45,7 +59,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 422);
         });
 
-        $exceptions->render(function (AuthenticationException $e): \Illuminate\Http\JsonResponse {
+        $exceptions->render(function (AuthenticationException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+            if (! str_starts_with($request->path(), 'api/')) {
+                return null;
+            }
+
             return response()->json([
                 'success' => false,
                 'code'    => 401,
@@ -54,7 +72,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
 
-        $exceptions->render(function (NotFoundHttpException $e): \Illuminate\Http\JsonResponse {
+        $exceptions->render(function (NotFoundHttpException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+            if (! str_starts_with($request->path(), 'api/')) {
+                return null;
+            }
+
             return response()->json([
                 'success' => false,
                 'code'    => 404,
@@ -63,7 +85,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
-        $exceptions->render(function (MethodNotAllowedHttpException $e): \Illuminate\Http\JsonResponse {
+        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+            if (! str_starts_with($request->path(), 'api/')) {
+                return null;
+            }
+
             return response()->json([
                 'success' => false,
                 'code'    => 405,

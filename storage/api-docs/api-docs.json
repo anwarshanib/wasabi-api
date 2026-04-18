@@ -5638,6 +5638,1524 @@
                 ]
             }
         },
+        "/api/v1/cardholders/occupations": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder Occupation",
+                "description": "Returns all supported cardholder occupation codes.\n\nUse the returned `occupationCode` values when creating or updating a cardholder.\n\nNo request body parameters are required.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/occupations",
+                "operationId": "cardholderOccupations",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "occupationCode": {
+                                                        "description": "Occupation code",
+                                                        "type": "string",
+                                                        "example": "11-1011"
+                                                    },
+                                                    "description": {
+                                                        "description": "Occupation description",
+                                                        "type": "string",
+                                                        "example": "Chief Executives"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cardholders/create": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder-Create-v1-Deprecated",
+                "description": "**Deprecated** — Create a new cardholder.\n\n**Restricted Countries/Regions** (cardholders from these regions cannot be created):\nCuba; North Korea; Egypt; Iran; Myanmar; Nigeria; Russia; Belarus; South Africa; Syria; Ukraine; Venezuela; Sudan; South Sudan; Libya; Crimea (Ukraine); Burundi; Central African Republic; Somalia; Zimbabwe; Afghanistan.\n\n**Supported ID Types by Country/Region**:\n- Hong Kong: `PASSPORT`, `HK_HKID`\n- Other Countries: `PASSPORT`, `DLN` (Driver's licence), `GOVERNMENT_ISSUED_ID_CARD` (ID card)\n\n`areaCode`: Mobile phone area code (length 2–5). Obtain supported values from the Support Bins API (`supportHolderAreaCode`).\n\n`nationality`: ISO 3166-1 alpha-2 nationality code. Obtain supported values from Support Bins API (`supportHolderNationality`).\n\n`country`: ISO 3166-1 alpha-2 country/region code for billing address. Obtain supported values from Support Bins API (`supportHolderRegin`).\n\n`town`: City code for billing address. Obtain from the City List API.\n\n`address`: length 2–40. Can only contain letters, numbers, hyphens and spaces. Regex: `^[A-Za-z0-9\\- ]+$`.\n\n`postCode`: length 2–15. Regex: `^[a-zA-Z0-9]{2,15}$`.\n\n`firstName` / `lastName`: Only English characters. length 2–32 each. Combined length of firstName and lastName (including space) must not exceed 32 characters.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/create",
+                "operationId": "createCardholderDeprecated",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "merchantOrderNo",
+                                    "cardTypeId",
+                                    "areaCode",
+                                    "mobile",
+                                    "email",
+                                    "firstName",
+                                    "lastName",
+                                    "birthday",
+                                    "nationality",
+                                    "country",
+                                    "town",
+                                    "address",
+                                    "postCode"
+                                ],
+                                "properties": {
+                                    "merchantOrderNo": {
+                                        "description": "Client transaction id. Length must be between 20 and 40 characters",
+                                        "type": "string",
+                                        "example": "ORDER202501010000000001"
+                                    },
+                                    "cardTypeId": {
+                                        "description": "Card type ID (from Support Bins API)",
+                                        "type": "integer",
+                                        "example": 111002
+                                    },
+                                    "areaCode": {
+                                        "description": "Mobile phone area code. Length 2–5. Obtain supported values from Support Bins API (supportHolderAreaCode)",
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "mobile": {
+                                        "description": "Mobile phone number. Length 5–20",
+                                        "type": "string",
+                                        "example": "4155550100"
+                                    },
+                                    "email": {
+                                        "description": "Email address. Receives verification code. Length 5–50",
+                                        "type": "string",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "firstName": {
+                                        "description": "First name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters (including spaces)",
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "lastName": {
+                                        "description": "Last name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters (including spaces)",
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "birthday": {
+                                        "description": "Date of birth. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "1990-01-15"
+                                    },
+                                    "nationality": {
+                                        "description": "Nationality code. ISO 3166-1 alpha-2. Obtain supported values from Support Bins API (supportHolderNationality)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "country": {
+                                        "description": "Country/Region code for billing address. ISO 3166-1 alpha-2. Obtain supported values from Support Bins API (supportHolderRegin)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "town": {
+                                        "description": "City code for billing address. Obtain from the City List API (code field)",
+                                        "type": "string",
+                                        "example": "LA"
+                                    },
+                                    "address": {
+                                        "description": "Billing address. Length 2–40. Letters, numbers, hyphens and spaces only. Regex: ^[A-Za-z0-9\\- ]+$",
+                                        "type": "string",
+                                        "example": "123 Main Street"
+                                    },
+                                    "postCode": {
+                                        "description": "Postal code for billing. Length 2–15. Regex: ^[a-zA-Z0-9]{2,15}$",
+                                        "type": "string",
+                                        "example": "90001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "holderId": {
+                                                    "description": "Cardholder id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "merchantOrderNo": {
+                                                    "description": "Client transaction id",
+                                                    "type": "string",
+                                                    "example": "114242059249029235245352442",
+                                                    "nullable": true
+                                                },
+                                                "cardTypeId": {
+                                                    "description": "Card type id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "statusFlowLocation": {
+                                                    "description": "Review flow location. admin: platform review",
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "status": {
+                                                    "description": "Cardholder status",
+                                                    "type": "string",
+                                                    "example": "pass_audit"
+                                                },
+                                                "description": {
+                                                    "description": "Description",
+                                                    "type": "string",
+                                                    "example": "SUCCESS"
+                                                },
+                                                "respMsg": {
+                                                    "description": "Response message",
+                                                    "type": "string",
+                                                    "example": "SUCCESS"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cardholders/update": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder-Update-v1-Deprecated",
+                "description": "**Deprecated** — Update an existing cardholder's information.\n\n`holderId`: The cardholder ID returned from the Create Cardholder API.\n\n`areaCode`: Mobile phone area code (length 2–5). Obtain supported values from the Support Bins API (`supportHolderAreaCode`).\n\n`nationality`: ISO 3166-1 alpha-2 nationality code. Obtain supported values from Support Bins API (`supportHolderNationality`).\n\n`country`: ISO 3166-1 alpha-2 country/region code for billing address. Obtain supported values from Support Bins API (`supportHolderRegin`).\n\n`town`: City code for billing address. Obtain from the City List API.\n\n`address`: length 2–40. Can only contain letters, numbers, hyphens and spaces. Regex: `^[A-Za-z0-9\\- ]+$`.\n\n`postCode`: length 2–15. Regex: `^[a-zA-Z0-9]{2,15}$`.\n\n`firstName` / `lastName`: Only English characters. length 2–32 each. Combined length must not exceed 32 characters.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/update",
+                "operationId": "updateCardholderDeprecated",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "holderId",
+                                    "areaCode",
+                                    "mobile",
+                                    "email",
+                                    "firstName",
+                                    "lastName",
+                                    "birthday",
+                                    "nationality",
+                                    "country",
+                                    "town",
+                                    "address",
+                                    "postCode"
+                                ],
+                                "properties": {
+                                    "holderId": {
+                                        "description": "Holder id (from Create Cardholder response)",
+                                        "type": "integer",
+                                        "example": 124024
+                                    },
+                                    "areaCode": {
+                                        "description": "Mobile phone area code. Length 2–5. Obtain supported values from Support Bins API (supportHolderAreaCode)",
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "mobile": {
+                                        "description": "Mobile phone number. Length 5–20",
+                                        "type": "string",
+                                        "example": "4155550100"
+                                    },
+                                    "email": {
+                                        "description": "Email address. Receives verification code. Length 5–50",
+                                        "type": "string",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "firstName": {
+                                        "description": "First name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters (including spaces)",
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "lastName": {
+                                        "description": "Last name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters (including spaces)",
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "birthday": {
+                                        "description": "Date of birth. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "1990-01-15"
+                                    },
+                                    "nationality": {
+                                        "description": "Nationality code. ISO 3166-1 alpha-2. Obtain supported values from Support Bins API (supportHolderNationality)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "country": {
+                                        "description": "Country/Region code for billing address. ISO 3166-1 alpha-2. Obtain supported values from Support Bins API (supportHolderRegin)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "town": {
+                                        "description": "City code for billing address. Obtain from the City List API (code field)",
+                                        "type": "string",
+                                        "example": "LA"
+                                    },
+                                    "address": {
+                                        "description": "Billing address. Length 2–40. Letters, numbers, hyphens and spaces only. Regex: ^[A-Za-z0-9\\- ]+$",
+                                        "type": "string",
+                                        "example": "123 Main Street"
+                                    },
+                                    "postCode": {
+                                        "description": "Postal code for billing. Length 2–15. Regex: ^[a-zA-Z0-9]{2,15}$",
+                                        "type": "string",
+                                        "example": "90001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "holderId": {
+                                                    "description": "Cardholder id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "merchantOrderNo": {
+                                                    "description": "Client transaction id",
+                                                    "type": "string",
+                                                    "example": "114242059249029235245352442",
+                                                    "nullable": true
+                                                },
+                                                "cardTypeId": {
+                                                    "description": "Card type id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "statusFlowLocation": {
+                                                    "description": "Review flow location. admin: platform review",
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "status": {
+                                                    "description": "Cardholder status",
+                                                    "type": "string",
+                                                    "example": "pass_audit"
+                                                },
+                                                "description": {
+                                                    "description": "Description",
+                                                    "type": "string",
+                                                    "example": "SUCCESS"
+                                                },
+                                                "respMsg": {
+                                                    "description": "Response message",
+                                                    "type": "string",
+                                                    "example": "SUCCESS"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cardholders/create-v2": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder-Create-v2",
+                "description": "Create a new cardholder using the V2 endpoint.\n\n**Important**: Cardholder information cannot be modified after submission. Email and ID number are globally unique per card type — a duplicate submitted from a different channel will be rejected.\n\n**cardHolderModel values**:\n- `B2B`: Standard model. Common fields only (no KYC documents required).\n- `B2C`: Extended model. All B2B fields plus `nationality`, `gender`, `occupation`, `annualSalary`, `accountPurpose`, `expectedMonthlyVolume`, `idType`, `idNumber`, `issueDate`, `idNoExpiryDate`, `idFrontId`, `idBackId`, `idHoldId`, `ipAddress`. Optional `kycVerification` object (required for card type 111065).\n\n**Supported ID types**: `PASSPORT`, `HK_HKID` (Hong Kong only), `DLN` (Driver\\'s license), `GOVERNMENT_ISSUED_ID_CARD`.\n\nThis endpoint supports a webhook notification on status change.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/v2/create",
+                "operationId": "createCardholderV2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cardHolderModel",
+                                    "merchantOrderNo",
+                                    "cardTypeId",
+                                    "areaCode",
+                                    "mobile",
+                                    "email",
+                                    "firstName",
+                                    "lastName",
+                                    "birthday",
+                                    "country",
+                                    "town",
+                                    "address",
+                                    "postCode"
+                                ],
+                                "properties": {
+                                    "cardHolderModel": {
+                                        "description": "Cardholder business model. Values: B2B, B2C",
+                                        "type": "string",
+                                        "example": "B2C"
+                                    },
+                                    "merchantOrderNo": {
+                                        "description": "Client transaction id. Length must be between 20 and 40 characters",
+                                        "type": "string",
+                                        "example": "ORDER202501010000000001"
+                                    },
+                                    "cardTypeId": {
+                                        "description": "Card type ID (from Support Bins API)",
+                                        "type": "integer",
+                                        "example": 111002
+                                    },
+                                    "areaCode": {
+                                        "description": "Mobile area code. Length 2–5. Obtain from Support Bins API (supportHolderAreaCode)",
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "mobile": {
+                                        "description": "Mobile phone number. Length 5–20",
+                                        "type": "string",
+                                        "example": "4155550100"
+                                    },
+                                    "email": {
+                                        "description": "Email. Receives verification code. Length 5–50",
+                                        "type": "string",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "firstName": {
+                                        "description": "First name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters",
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "lastName": {
+                                        "description": "Last name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters",
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "birthday": {
+                                        "description": "Date of birth. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "1990-01-15"
+                                    },
+                                    "country": {
+                                        "description": "Country/Region code for billing address. ISO 3166-1 alpha-2. Obtain from Support Bins API (supportHolderRegin)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "town": {
+                                        "description": "City code for billing address. Obtain from City List API (code field)",
+                                        "type": "string",
+                                        "example": "LA"
+                                    },
+                                    "address": {
+                                        "description": "Billing address. Length 2–40. Letters, numbers, hyphens and spaces only. Regex: ^[A-Za-z0-9\\- ]+$",
+                                        "type": "string",
+                                        "example": "123 Main Street"
+                                    },
+                                    "postCode": {
+                                        "description": "Postal code. Length 2–15. Regex: ^[a-zA-Z0-9]{1,15}$",
+                                        "type": "string",
+                                        "example": "90001"
+                                    },
+                                    "nationality": {
+                                        "description": "[B2C only] Nationality code. ISO 3166-1 alpha-2. Obtain from Support Bins API (supportHolderNationality)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "gender": {
+                                        "description": "[B2C only] Gender. M: male, F: female",
+                                        "type": "string",
+                                        "example": "M"
+                                    },
+                                    "occupation": {
+                                        "description": "[B2C only] Occupation code. Obtain from Cardholder Occupation API (occupationCode)",
+                                        "type": "string",
+                                        "example": "11-1011"
+                                    },
+                                    "annualSalary": {
+                                        "description": "[B2C only] Annual salary. Example: 100000 USD",
+                                        "type": "string",
+                                        "example": "100000 USD"
+                                    },
+                                    "accountPurpose": {
+                                        "description": "[B2C only] Account purpose. English only",
+                                        "type": "string",
+                                        "example": "Living Expense"
+                                    },
+                                    "expectedMonthlyVolume": {
+                                        "description": "[B2C only] Expected monthly trading volume. Example: 10000 USD",
+                                        "type": "string",
+                                        "example": "10000 USD"
+                                    },
+                                    "idType": {
+                                        "description": "[B2C only] ID type. Values: PASSPORT, HK_HKID (Hong Kong), DLN (Driver's license), GOVERNMENT_ISSUED_ID_CARD",
+                                        "type": "string",
+                                        "example": "PASSPORT"
+                                    },
+                                    "idNumber": {
+                                        "description": "[B2C only] ID number. Length 2–50",
+                                        "type": "string",
+                                        "example": "A12345678"
+                                    },
+                                    "issueDate": {
+                                        "description": "[B2C only] ID document issuance date. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "2020-01-01"
+                                    },
+                                    "idNoExpiryDate": {
+                                        "description": "[B2C only] ID document expiration date. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "2030-01-01"
+                                    },
+                                    "idFrontId": {
+                                        "description": "[B2C only] Front photo of ID card file ID. Obtain from Upload File API",
+                                        "type": "string",
+                                        "example": "file_abc123"
+                                    },
+                                    "idBackId": {
+                                        "description": "[B2C only] Back photo of ID card file ID. Obtain from Upload File API. If no back view, reuse idFrontId",
+                                        "type": "string",
+                                        "example": "file_def456"
+                                    },
+                                    "idHoldId": {
+                                        "description": "[B2C only] User face/selfie photo file ID. Obtain from Upload File API",
+                                        "type": "string",
+                                        "example": "file_ghi789"
+                                    },
+                                    "ipAddress": {
+                                        "description": "[B2C only] Client IPv4 address",
+                                        "type": "string",
+                                        "example": "192.168.1.1"
+                                    },
+                                    "kycVerification": {
+                                        "description": "[B2C only, optional] KYC verification credentials. Required for card type 111065",
+                                        "properties": {
+                                            "provider": {
+                                                "description": "Third-party KYC provider name. Example: SUMSUB",
+                                                "type": "string",
+                                                "example": "SUMSUB"
+                                            },
+                                            "referenceId": {
+                                                "description": "Third-party KYC provider referenceId. For SUMSUB, pass the applicantId",
+                                                "type": "string",
+                                                "example": "abc123"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "holderId": {
+                                                    "description": "Cardholder id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "merchantOrderNo": {
+                                                    "description": "Client transaction id",
+                                                    "type": "string",
+                                                    "example": "114242059249029235245352442",
+                                                    "nullable": true
+                                                },
+                                                "cardTypeId": {
+                                                    "description": "Card type id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "statusFlowLocation": {
+                                                    "description": "Review flow location. Process: Platform review first, then bank review. admin: platform review; channel: bank review",
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "status": {
+                                                    "description": "Status: wait_audit (Pending), pass_audit (Approved), under_review (In review), reject (Rejected)",
+                                                    "type": "string",
+                                                    "example": "pass_audit"
+                                                },
+                                                "description": {
+                                                    "description": "Description",
+                                                    "type": "string",
+                                                    "example": "SUCCESS",
+                                                    "nullable": true
+                                                },
+                                                "respMsg": {
+                                                    "description": "Remark. Deprecated, will be removed",
+                                                    "type": "string",
+                                                    "example": "SUCCESS",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cardholders/update-v2": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder-Update-v2",
+                "description": "Update an existing cardholder using the V2 endpoint.\n\n**Note**: Updating is supported only when `status=reject`.\n\n**cardHolderModel values**:\n- `B2B`: Standard model. Common fields only.\n- `B2C`: Extended model. All B2B fields plus nationality, gender, occupation, annualSalary, accountPurpose, expectedMonthlyVolume, idType, idNumber, issueDate, idNoExpiryDate, idFrontId, idBackId, idHoldId, ipAddress. Optional kycVerification object.\n\nThis endpoint supports a webhook notification on status change.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/v2/update",
+                "operationId": "updateCardholderV2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cardHolderModel",
+                                    "holderId",
+                                    "areaCode",
+                                    "mobile",
+                                    "email",
+                                    "firstName",
+                                    "lastName",
+                                    "birthday",
+                                    "country",
+                                    "town",
+                                    "address",
+                                    "postCode"
+                                ],
+                                "properties": {
+                                    "cardHolderModel": {
+                                        "description": "Cardholder business model. Values: B2B, B2C",
+                                        "type": "string",
+                                        "example": "B2C"
+                                    },
+                                    "holderId": {
+                                        "description": "Holder id (from Create Cardholder response)",
+                                        "type": "integer",
+                                        "example": 124024
+                                    },
+                                    "areaCode": {
+                                        "description": "Mobile phone area code. Length 2–5. Obtain from Support Bins API (supportHolderAreaCode)",
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "mobile": {
+                                        "description": "Mobile phone number. Length 5–20",
+                                        "type": "string",
+                                        "example": "4155550100"
+                                    },
+                                    "email": {
+                                        "description": "Email. Receives verification code. Length 5–50",
+                                        "type": "string",
+                                        "example": "john@example.com"
+                                    },
+                                    "firstName": {
+                                        "description": "First name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters",
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "lastName": {
+                                        "description": "Last name. Only English characters. Length 2–32. Combined firstName + lastName cannot exceed 32 characters",
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "birthday": {
+                                        "description": "Date of birth. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "1990-01-15"
+                                    },
+                                    "country": {
+                                        "description": "Country/Region code for billing address. ISO 3166-1 alpha-2. Obtain from Support Bins API (supportHolderRegin)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "town": {
+                                        "description": "City code for billing address. Obtain from City List API (code field)",
+                                        "type": "string",
+                                        "example": "LA"
+                                    },
+                                    "address": {
+                                        "description": "Billing address. Length 2–40. Letters, numbers, hyphens and spaces only. Regex: ^[A-Za-z0-9\\- ]+$",
+                                        "type": "string",
+                                        "example": "123 Main Street"
+                                    },
+                                    "postCode": {
+                                        "description": "Postal code. Length 2–15. Regex: ^[a-zA-Z0-9]{1,15}$",
+                                        "type": "string",
+                                        "example": "90001"
+                                    },
+                                    "nationality": {
+                                        "description": "[B2C only] Nationality code. ISO 3166-1 alpha-2. Obtain from Support Bins API (supportHolderNationality)",
+                                        "type": "string",
+                                        "example": "US"
+                                    },
+                                    "gender": {
+                                        "description": "[B2C only] Gender. M: male, F: female",
+                                        "type": "string",
+                                        "example": "M"
+                                    },
+                                    "occupation": {
+                                        "description": "[B2C only] Occupation code. Obtain from Cardholder Occupation API (occupationCode)",
+                                        "type": "string",
+                                        "example": "11-1011"
+                                    },
+                                    "annualSalary": {
+                                        "description": "[B2C only] Annual salary. Example: 10000000 USD",
+                                        "type": "string",
+                                        "example": "100000 USD"
+                                    },
+                                    "accountPurpose": {
+                                        "description": "[B2C only] Account purpose. English only",
+                                        "type": "string",
+                                        "example": "Living Expense"
+                                    },
+                                    "expectedMonthlyVolume": {
+                                        "description": "[B2C only] Expected monthly trading volume. Example: 100000 USD",
+                                        "type": "string",
+                                        "example": "10000 USD"
+                                    },
+                                    "idType": {
+                                        "description": "[B2C only] ID type. Values: PASSPORT, HK_HKID (Hong Kong), DLN (Driver's license), GOVERNMENT_ISSUED_ID_CARD",
+                                        "type": "string",
+                                        "example": "PASSPORT"
+                                    },
+                                    "idNumber": {
+                                        "description": "[B2C only] ID number. Length 2–50",
+                                        "type": "string",
+                                        "example": "A12345678"
+                                    },
+                                    "issueDate": {
+                                        "description": "[B2C only] ID document issuance date. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "2020-01-01"
+                                    },
+                                    "idNoExpiryDate": {
+                                        "description": "[B2C only] ID document expiration date. Format: yyyy-MM-dd",
+                                        "type": "string",
+                                        "example": "2030-01-01"
+                                    },
+                                    "idFrontId": {
+                                        "description": "[B2C only] Front photo of ID card file ID. Obtain from Upload File API",
+                                        "type": "string",
+                                        "example": "file_abc123"
+                                    },
+                                    "idBackId": {
+                                        "description": "[B2C only] Back photo of ID card file ID. Obtain from Upload File API. If no back view, reuse idFrontId",
+                                        "type": "string",
+                                        "example": "file_def456"
+                                    },
+                                    "idHoldId": {
+                                        "description": "[B2C only] User selfie photo file ID. Obtain from Upload File API",
+                                        "type": "string",
+                                        "example": "file_ghi789"
+                                    },
+                                    "ipAddress": {
+                                        "description": "[B2C only] Client IPv4 address",
+                                        "type": "string",
+                                        "example": "192.168.1.1"
+                                    },
+                                    "kycVerification": {
+                                        "description": "[B2C only, optional] KYC verification credentials. Required for card type 111065",
+                                        "properties": {
+                                            "provider": {
+                                                "description": "Third-party KYC provider name. Example: SUMSUB",
+                                                "type": "string",
+                                                "example": "SUMSUB"
+                                            },
+                                            "referenceId": {
+                                                "description": "Third-party KYC provider referenceId. For SUMSUB, pass the applicantId",
+                                                "type": "string",
+                                                "example": "abc123"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "holderId": {
+                                                    "description": "Cardholder id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "merchantOrderNo": {
+                                                    "description": "Client transaction id",
+                                                    "type": "string",
+                                                    "example": "114242059249029235245352442",
+                                                    "nullable": true
+                                                },
+                                                "cardTypeId": {
+                                                    "description": "Card type id",
+                                                    "type": "integer",
+                                                    "example": 124024
+                                                },
+                                                "statusFlowLocation": {
+                                                    "description": "Review flow location. Process: Platform review first, then bank review. Update supported only when statusFlowLocation=admin and status=reject. admin: platform review; channel: bank review",
+                                                    "type": "string",
+                                                    "example": "admin"
+                                                },
+                                                "status": {
+                                                    "description": "Status: wait_audit (Pending), pass_audit (Approved), under_review (In review), reject (Rejected)",
+                                                    "type": "string",
+                                                    "example": "pass_audit"
+                                                },
+                                                "description": {
+                                                    "description": "Description",
+                                                    "type": "string",
+                                                    "example": "SUCCESS",
+                                                    "nullable": true
+                                                },
+                                                "respMsg": {
+                                                    "description": "Remark. Deprecated, will be removed",
+                                                    "type": "string",
+                                                    "example": "SUCCESS",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cardholders/list": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder-List",
+                "description": "Returns a paginated list of cardholders.\n\n**Note**: `areaCode` and `mobile` must be passed together or not at all.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/query",
+                "operationId": "cardholderList",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "pageNum",
+                                    "pageSize"
+                                ],
+                                "properties": {
+                                    "pageNum": {
+                                        "description": "Current page. Default is 1",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "pageSize": {
+                                        "description": "Number of records per page. Maximum 100, default 10",
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "holderId": {
+                                        "description": "Holder id (optional filter)",
+                                        "type": "integer",
+                                        "example": 102424
+                                    },
+                                    "areaCode": {
+                                        "description": "Mobile area code (optional filter). Must be passed together with mobile. Example: +1",
+                                        "type": "string",
+                                        "example": "+1"
+                                    },
+                                    "mobile": {
+                                        "description": "Mobile phone number (optional filter). Must be passed together with areaCode",
+                                        "type": "string",
+                                        "example": "4155550100"
+                                    },
+                                    "email": {
+                                        "description": "Email (optional filter)",
+                                        "type": "string",
+                                        "example": "john@example.com"
+                                    },
+                                    "merchantOrderNo": {
+                                        "description": "Client transaction id (optional filter)",
+                                        "type": "string",
+                                        "example": "ORDER202501010000000001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total": {
+                                                    "description": "Total number of matching records",
+                                                    "type": "integer",
+                                                    "example": 11
+                                                },
+                                                "records": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "holderId": {
+                                                                "description": "Cardholder id",
+                                                                "type": "integer",
+                                                                "example": 102424
+                                                            },
+                                                            "merchantOrderNo": {
+                                                                "description": "Client transaction id",
+                                                                "type": "string",
+                                                                "example": "24353647ksglsan3535",
+                                                                "nullable": true
+                                                            },
+                                                            "cardTypeId": {
+                                                                "description": "Card type id",
+                                                                "type": "integer",
+                                                                "example": 102424
+                                                            },
+                                                            "areaCode": {
+                                                                "description": "Mobile area code",
+                                                                "type": "string",
+                                                                "example": "+852"
+                                                            },
+                                                            "mobile": {
+                                                                "description": "Mobile number",
+                                                                "type": "string",
+                                                                "example": "875692311"
+                                                            },
+                                                            "email": {
+                                                                "description": "Email",
+                                                                "type": "string",
+                                                                "example": "test@test.com"
+                                                            },
+                                                            "firstName": {
+                                                                "description": "First name",
+                                                                "type": "string",
+                                                                "example": "elly"
+                                                            },
+                                                            "lastName": {
+                                                                "description": "Last name",
+                                                                "type": "string",
+                                                                "example": "tom"
+                                                            },
+                                                            "birthday": {
+                                                                "description": "Date of birth. YYYY-MM-dd",
+                                                                "type": "string",
+                                                                "example": "1990-10-10"
+                                                            },
+                                                            "country": {
+                                                                "description": "Country/Region Code. ISO 3166-1 alpha-2",
+                                                                "type": "string",
+                                                                "example": "HK"
+                                                            },
+                                                            "countryStr": {
+                                                                "description": "Country/Region name",
+                                                                "type": "string",
+                                                                "example": "Hong Kong"
+                                                            },
+                                                            "town": {
+                                                                "description": "City code",
+                                                                "type": "string",
+                                                                "example": "HK_KKC_1"
+                                                            },
+                                                            "townStr": {
+                                                                "description": "City name",
+                                                                "type": "string",
+                                                                "example": "\\u4e5d\\u9f99\\u57ce\\u533a"
+                                                            },
+                                                            "address": {
+                                                                "description": "Billing address",
+                                                                "type": "string",
+                                                                "example": "To Kwa Wan, Kowloon, Hong Kong"
+                                                            },
+                                                            "postCode": {
+                                                                "description": "Postal code",
+                                                                "type": "string",
+                                                                "example": "999077"
+                                                            },
+                                                            "statusFlowLocation": {
+                                                                "description": "Review flow location. Update supported only when statusFlowLocation=admin and status=reject. admin: Wasabi review; channel: Bank review",
+                                                                "type": "string",
+                                                                "example": "admin"
+                                                            },
+                                                            "status": {
+                                                                "description": "Status: wait_audit (Pending), pass_audit (Approved), under_review (In review), reject (Rejected)",
+                                                                "type": "string",
+                                                                "example": "pass_audit"
+                                                            },
+                                                            "description": {
+                                                                "description": "Description",
+                                                                "type": "string",
+                                                                "example": "SUCCESS"
+                                                            },
+                                                            "respMsg": {
+                                                                "description": "Remark. Deprecated, will be removed",
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "createTime": {
+                                                                "description": "Creation time (Unix milliseconds)",
+                                                                "type": "integer",
+                                                                "example": 232413142131
+                                                            },
+                                                            "updateTime": {
+                                                                "description": "Last update time (Unix milliseconds)",
+                                                                "type": "integer",
+                                                                "example": 232413142131
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cardholders/update-email": {
+            "post": {
+                "tags": [
+                    "Cardholder"
+                ],
+                "summary": "Cardholder-Update Email",
+                "description": "Update the email address of a cardholder.\n\n**Note**: Updating is supported only when cardholder `status=pass_audit`.\n\nThis endpoint supports a webhook notification on status change.\n\nSource: Wasabi Card /merchant/core/mcb/card/holder/updateEmail",
+                "operationId": "updateCardholderEmail",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "holderId",
+                                    "merchantOrderNo",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "holderId": {
+                                        "description": "Holder id",
+                                        "type": "integer",
+                                        "example": 102424
+                                    },
+                                    "merchantOrderNo": {
+                                        "description": "Client transaction id",
+                                        "type": "string",
+                                        "example": "24253524245242542524"
+                                    },
+                                    "email": {
+                                        "description": "New email address. Length 5–50",
+                                        "type": "string",
+                                        "example": "testB@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "holderId": {
+                                                    "description": "Cardholder id",
+                                                    "type": "integer",
+                                                    "example": 102424
+                                                },
+                                                "merchantOrderNo": {
+                                                    "description": "Client transaction id",
+                                                    "type": "string",
+                                                    "example": "24253524245242542524"
+                                                },
+                                                "orderNo": {
+                                                    "description": "Transaction id",
+                                                    "type": "string",
+                                                    "example": "202603302038633380833681408"
+                                                },
+                                                "status": {
+                                                    "description": "Status: wait_audit (Pending), pass_audit (Approved), under_review (In review), reject (Rejected)",
+                                                    "type": "string",
+                                                    "example": "pass_audit"
+                                                },
+                                                "description": {
+                                                    "description": "Description",
+                                                    "type": "string",
+                                                    "example": "update email from [testA@example.com] to [testB@example.com]; ",
+                                                    "nullable": true
+                                                },
+                                                "remark": {
+                                                    "description": "Remark",
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Upstream Wasabi API error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/common/regions": {
             "get": {
                 "tags": [
@@ -7298,6 +8816,249 @@
                 ]
             }
         },
+        "/api/v1/webhook-events": {
+            "get": {
+                "tags": [
+                    "Webhook Events"
+                ],
+                "summary": "Webhook Event List",
+                "description": "Returns a paginated list of inbound Wasabi webhook events received by this server.\n\nUse this endpoint to poll for the **final async result** of operations like cardholder creation, card activation, or wallet deposits. Wasabi pushes the final status asynchronously — the initial API response contains a pending status (e.g. `wait_audit`), and the final result (e.g. `pass_audit` or `reject`) arrives via webhook and is stored here.\n\n**How to use:**\n1. Call e.g. `POST /api/v1/cardholders/create-v2` → receive `{ status: 'wait_audit' }`\n2. Poll this endpoint filtering by `category=card_holder` and `reference_id={holderId}` until a final status appears.\n\n**Available `category` values:**\n- `card_holder` — Cardholder create/update v2 status changes\n- `card_holder_change_email` — Cardholder email update status\n- `card_transaction` — Card deposit/withdraw/cancel final result\n- `card_auth_transaction` — Card authorization (may be pushed multiple times as status flows)\n- `card_fee_patch` — Authorization fee applied\n- `card_3ds` — 3DS OTP code, auth URL, or activation code\n- `physical_card` — Physical card activation result\n- `work` — Work order status\n- `wallet_transaction` — Wallet deposit/withdrawal\n- `wallet_transaction_v2` — Wallet transaction history v2\n\n**`reference_id` values by category:**\n- `card_holder`, `card_holder_change_email` → `holderId`\n- `card_auth_transaction`, `card_fee_patch`, `card_3ds` → `tradeNo`\n- `card_transaction`, `work`, `wallet_transaction`, `wallet_transaction_v2` → `orderNo`\n- `physical_card` → `cardNo`",
+                "operationId": "listWebhookEvents",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter by event category. Example: card_holder",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 60
+                        },
+                        "example": "card_holder"
+                    },
+                    {
+                        "name": "reference_id",
+                        "in": "query",
+                        "description": "Filter by primary entity ID. Meaning depends on category: holderId for card_holder; tradeNo for card_auth_transaction/card_3ds/card_fee_patch; orderNo for card_transaction/work/wallet; cardNo for physical_card",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 100
+                        },
+                        "example": "123456"
+                    },
+                    {
+                        "name": "merchant_order_no",
+                        "in": "query",
+                        "description": "Filter by merchantOrderNo from the event payload",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 60
+                        },
+                        "example": "ORDER202501010000000001"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status from the event payload. Examples: pass_audit, reject, wait_audit, success, fail",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 40
+                        },
+                        "example": "pass_audit"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Filter events received on or after this datetime. Format: Y-m-d H:i:s",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-04-01 00:00:00"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Filter events received on or before this datetime. Format: Y-m-d H:i:s",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-04-30 23:59:59"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of records per page. Maximum 100",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        },
+                        "example": 15
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total": {
+                                                    "description": "Total matching records",
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "request_id": {
+                                                                "description": "Wasabi unique request ID (X-WSB-REQUEST-ID)",
+                                                                "type": "string",
+                                                                "example": "wsb-req-abc123",
+                                                                "nullable": true
+                                                            },
+                                                            "category": {
+                                                                "description": "Event category (X-WSB-CATEGORY)",
+                                                                "type": "string",
+                                                                "example": "card_holder"
+                                                            },
+                                                            "reference_id": {
+                                                                "description": "Primary entity ID extracted from payload",
+                                                                "type": "string",
+                                                                "example": "124024",
+                                                                "nullable": true
+                                                            },
+                                                            "merchant_order_no": {
+                                                                "description": "merchantOrderNo from payload",
+                                                                "type": "string",
+                                                                "example": "ORDER202501010000000001",
+                                                                "nullable": true
+                                                            },
+                                                            "status": {
+                                                                "description": "Status from payload (status or tradeStatus field)",
+                                                                "type": "string",
+                                                                "example": "pass_audit",
+                                                                "nullable": true
+                                                            },
+                                                            "signature_verified": {
+                                                                "description": "Whether the X-WSB-SIGNATURE RSA verification passed",
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "payload": {
+                                                                "description": "Full raw event payload from Wasabi. Structure varies per category — see Wasabi webhook documentation",
+                                                                "type": "object"
+                                                            },
+                                                            "created_at": {
+                                                                "description": "Timestamp when this event was received",
+                                                                "type": "string",
+                                                                "example": "2026-04-18T10:00:00.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "example": "2026-04-18T10:00:00.000000Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/work-orders": {
             "get": {
                 "tags": [
@@ -7779,6 +9540,14 @@
         {
             "name": "Card",
             "description": "Card management — card types, create and manage cards"
+        },
+        {
+            "name": "Cardholder",
+            "description": "Cardholder management — create, update and list cardholders"
+        },
+        {
+            "name": "Webhook Events",
+            "description": "Webhook event log — poll for async final results pushed by Wasabi Card"
         }
     ]
 }
