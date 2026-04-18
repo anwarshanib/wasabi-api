@@ -23,6 +23,8 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Common',      description: 'Reference data — regions, cities, mobile codes, file upload')]
 #[OA\Tag(name: 'Work Orders', description: 'Work order management — submit and query Wasabi platform work orders')]
 #[OA\Tag(name: 'Account',     description: 'Account management — assets and account list')]
+#[OA\Tag(name: 'Wallet',      description: 'Wallet management — deposit orders and transaction history (Deprecated endpoints)')]
+#[OA\Tag(name: 'Card',        description: 'Card management — card types, create and manage cards')]
 #[OA\Schema(
     schema: 'AccountObject',
     description: 'A single merchant account with live balance information',

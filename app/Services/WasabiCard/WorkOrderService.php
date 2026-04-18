@@ -48,7 +48,7 @@ final class WorkOrderService
             $body['remark'] = $params['remark'];
         }
 
-        return $this->client->post('/merchant/core/mcb/work/submit', $body)['data'];
+        return $this->client->post('/merchant/core/mcb/work/submit', $body)['data'] ?? [];
     }
 
     /**
@@ -88,6 +88,6 @@ final class WorkOrderService
             $body['tradeStatus'] = $params['tradeStatus'];
         }
 
-        return $this->client->post('/merchant/core/mcb/work/list', $body)['data'];
+        return $this->client->post('/merchant/core/mcb/work/list', $body)['data'] ?? [];
     }
 }

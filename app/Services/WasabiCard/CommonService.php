@@ -33,7 +33,7 @@ final class CommonService
         return Cache::remember(
             'wasabi:common:regions',
             config('wasabi.cache.regions'),
-            fn (): array => $this->client->post('/merchant/core/mcb/common/region')['data'],
+            fn (): array => $this->client->post('/merchant/core/mcb/common/region')['data'] ?? [],
         );
     }
 
@@ -54,7 +54,7 @@ final class CommonService
         return Cache::remember(
             $cacheKey,
             config('wasabi.cache.regions'),
-            fn (): array => $this->client->post('/merchant/core/mcb/common/city', $body)['data'],
+            fn (): array => $this->client->post('/merchant/core/mcb/common/city', $body)['data'] ?? [],
         );
     }
 
@@ -76,7 +76,7 @@ final class CommonService
         return Cache::remember(
             $cacheKey,
             config('wasabi.cache.regions'),
-            fn (): array => $this->client->post('/merchant/core/mcb/common/v2/city', $body)['data'],
+            fn (): array => $this->client->post('/merchant/core/mcb/common/v2/city', $body)['data'] ?? [],
         );
     }
 
@@ -92,7 +92,7 @@ final class CommonService
         return Cache::remember(
             'wasabi:common:mobile-codes',
             config('wasabi.cache.regions'),
-            fn (): array => $this->client->post('/merchant/core/mcb/common/mobileAreaCode')['data'],
+            fn (): array => $this->client->post('/merchant/core/mcb/common/mobileAreaCode')['data'] ?? [],
         );
     }
 
@@ -107,7 +107,7 @@ final class CommonService
     public function uploadFile(UploadedFile $file): array
     {
         /** @var array{fileId: string} $data */
-        $data = $this->client->postMultipart('/merchant/core/mcb/common/file/upload', $file)['data'];
+        $data = $this->client->postMultipart('/merchant/core/mcb/common/file/upload', $file)['data'] ?? [];
 
         return $data;
     }
