@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\TenantResource;
+use App\Services\TenantOwnershipService;
 use App\Services\WasabiCard\CardService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +22,7 @@ final class CardController extends Controller
 
     public function __construct(
         private readonly CardService $cardService,
+        private readonly TenantOwnershipService $ownership,
     ) {}
 
     #[OA\Post(
@@ -233,6 +236,14 @@ final class CardController extends Controller
 
         $result = $this->cardService->createCardDeprecated($validated);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if (! empty($result['cardNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_CARD, (string) $result['cardNo'], $validated['merchantOrderNo']);
+        }
+        if (! empty($result['orderNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
+        }
+
         return $this->success($result);
     }
 
@@ -347,6 +358,14 @@ final class CardController extends Controller
         $validated['amount'] = (string) $validated['amount'];
 
         $result = $this->cardService->createCardV2($validated);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if (! empty($result['cardNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_CARD, (string) $result['cardNo'], $validated['merchantOrderNo']);
+        }
+        if (! empty($result['orderNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -473,6 +492,11 @@ final class CardController extends Controller
             'onlySimpleInfo' => ['nullable', 'boolean'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->cardInfo($validated);
 
         return $this->success($result);
@@ -535,6 +559,11 @@ final class CardController extends Controller
             'cardNo' => ['required', 'string'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->cardInfoForSensitive($validated);
 
         return $this->success($result);
@@ -596,6 +625,11 @@ final class CardController extends Controller
         $validated = $request->validate([
             'cardNo' => ['required', 'string'],
         ]);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
 
         $result = $this->cardService->cardBalance($validated);
 
@@ -755,7 +789,16 @@ final class CardController extends Controller
             'endTime'    => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        $ownedCardNos = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_CARD);
+
         $result = $this->cardService->cardList($validated);
+
+        $result['records'] = array_values(array_filter(
+            $result['records'] ?? [],
+            fn ($r) => in_array((string) ($r['cardNo'] ?? ''), $ownedCardNos, true)
+        ));
+        $result['total'] = count($result['records']);
 
         return $this->success($result);
     }
@@ -866,6 +909,11 @@ final class CardController extends Controller
                 $control['amount'] = (string) $control['amount'];
             }
             unset($control);
+        }
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
         }
 
         $result = $this->cardService->updateCard($validated);
@@ -984,6 +1032,11 @@ final class CardController extends Controller
             'clientRemark' => ['nullable', 'string', 'max:50'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->updateNote($validated);
 
         return $this->success($result);
@@ -1054,7 +1107,16 @@ final class CardController extends Controller
             'clientRemark'    => ['nullable', 'string', 'max:50'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->freezeCardV2($validated);
+
+        if (! empty($result['orderNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -1124,7 +1186,16 @@ final class CardController extends Controller
             'clientRemark'    => ['nullable', 'string', 'max:50'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->unfreezeCardV2($validated);
+
+        if (! empty($result['orderNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -1196,7 +1267,16 @@ final class CardController extends Controller
 
         $validated['amount'] = (string) $validated['amount'];
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->depositCard($validated);
+
+        if (! empty($result['orderNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -1269,7 +1349,16 @@ final class CardController extends Controller
 
         $validated['amount'] = (string) $validated['amount'];
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->withdrawCard($validated);
+
+        if (! empty($result['orderNo'])) {
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -1337,6 +1426,11 @@ final class CardController extends Controller
             'merchantOrderNo' => ['required', 'string', 'min:15', 'max:65'],
             'clientRemark'    => ['nullable', 'string', 'max:50'],
         ]);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
 
         $result = $this->cardService->cancelCard($validated);
 
@@ -1408,6 +1502,11 @@ final class CardController extends Controller
             $validated['noPinPaymentAmount'] = (string) $validated['noPinPaymentAmount'];
         }
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
+
         $result = $this->cardService->activatePhysicalCard($validated);
 
         return $this->success($result);
@@ -1477,6 +1576,11 @@ final class CardController extends Controller
             'merchantOrderNo' => ['required', 'string', 'min:15', 'max:65'],
             'pin'             => ['required', 'string', 'digits:6'],
         ]);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+            return $deny;
+        }
 
         $result = $this->cardService->updatePin($validated);
 
@@ -1562,7 +1666,16 @@ final class CardController extends Controller
             'endTime'         => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        $ownedOrderNos = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_ORDER);
+
         $result = $this->cardService->cardPurchaseTransactions($validated);
+
+        $result['records'] = array_values(array_filter(
+            $result['records'] ?? [],
+            fn ($r) => in_array((string) ($r['orderNo'] ?? ''), $ownedOrderNos, true)
+        ));
+        $result['total'] = count($result['records']);
 
         return $this->success($result);
     }
@@ -1652,7 +1765,24 @@ final class CardController extends Controller
             'endTime'         => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+
+        if (isset($validated['cardNo'])) {
+            if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+                return $deny;
+            }
+        }
+
         $result = $this->cardService->cardOperationTransactions($validated);
+
+        if (! isset($validated['cardNo'])) {
+            $ownedCardNos = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_CARD);
+            $result['records'] = array_values(array_filter(
+                $result['records'] ?? [],
+                fn ($r) => in_array((string) ($r['cardNo'] ?? ''), $ownedCardNos, true)
+            ));
+            $result['total'] = count($result['records']);
+        }
 
         return $this->success($result);
     }
@@ -1742,7 +1872,24 @@ final class CardController extends Controller
             'endTime'         => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+
+        if (isset($validated['cardNo'])) {
+            if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+                return $deny;
+            }
+        }
+
         $result = $this->cardService->cardOperationTransactionsV2($validated);
+
+        if (! isset($validated['cardNo'])) {
+            $ownedCardNos = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_CARD);
+            $result['records'] = array_values(array_filter(
+                $result['records'] ?? [],
+                fn ($r) => in_array((string) ($r['cardNo'] ?? ''), $ownedCardNos, true)
+            ));
+            $result['total'] = count($result['records']);
+        }
 
         return $this->success($result);
     }
@@ -1853,7 +2000,24 @@ final class CardController extends Controller
             'endTime'   => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+
+        if (isset($validated['cardNo'])) {
+            if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARD, $validated['cardNo'])) {
+                return $deny;
+            }
+        }
+
         $result = $this->cardService->cardAuthorizationTransactions($validated);
+
+        if (! isset($validated['cardNo'])) {
+            $ownedCardNos = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_CARD);
+            $result['records'] = array_values(array_filter(
+                $result['records'] ?? [],
+                fn ($r) => in_array((string) ($r['cardNo'] ?? ''), $ownedCardNos, true)
+            ));
+            $result['total'] = count($result['records']);
+        }
 
         return $this->success($result);
     }

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\WebhookEvent;
+use App\Models\TenantResource;
+use App\Services\TenantOwnershipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +27,9 @@ use Illuminate\Support\Facades\Log;
  */
 final class WebhookController extends Controller
 {
+    public function __construct(
+        private readonly TenantOwnershipService $ownership,
+    ) {}
     /**
      * Receive a Wasabi webhook event.
      *
@@ -82,6 +87,12 @@ final class WebhookController extends Controller
             ? (string) $payload['status']
             : (isset($payload['tradeStatus']) ? (string) $payload['tradeStatus'] : null);
 
+        // Resolve the ownership token ID using the reference_id
+        $resourceType = $this->resolveResourceType($category, $payload);
+        $apiTokenId   = ($referenceId !== null && $resourceType !== null)
+            ? $this->ownership->ownerTokenId($resourceType, (string) $referenceId)
+            : null;
+
         WebhookEvent::create([
             'request_id'        => $requestId ? (string) $requestId : null,
             'category'          => $category,
@@ -90,13 +101,29 @@ final class WebhookController extends Controller
             'status'            => $status,
             'payload'           => $payload,
             'signature_verified' => $verified,
+            'api_token_id'      => $apiTokenId,
         ]);
+
+        // Backfill: when a card creation work-order completes, register the cardNo
+        if ($category === 'work'
+            && ! empty($payload['cardNo'])
+            && ! empty($payload['orderNo'])
+            && $apiTokenId !== null
+        ) {
+            $this->ownership->register(
+                $apiTokenId,
+                TenantResource::TYPE_CARD,
+                (string) $payload['cardNo'],
+                $merchantOrderNo,
+            );
+        }
 
         Log::channel('wasabi')->info('Webhook: event stored', [
             'category'     => $category,
             'request_id'   => $requestId,
             'reference_id' => $referenceId,
             'status'       => $status,
+            'api_token_id' => $apiTokenId,
         ]);
 
         return $this->wasabiAck();
@@ -161,6 +188,21 @@ final class WebhookController extends Controller
 
         // openssl_verify: 1 = valid, 0 = invalid, -1 = error
         return openssl_verify($rawBody, $decodedSignature, $publicKey, OPENSSL_ALGO_SHA256) === 1;
+    }
+
+    /**
+     * Determine which TenantResource type owns the referenceId for this event.
+     *
+     * @param  array<string, mixed> $payload
+     */
+    private function resolveResourceType(string $category, array $payload): ?string
+    {
+        return match (true) {
+            in_array($category, ['card_holder', 'card_holder_change_email'], true) => TenantResource::TYPE_CARDHOLDER,
+            $category === 'physical_card'                                           => TenantResource::TYPE_CARD,
+            in_array($category, ['card_transaction', 'work', 'wallet_transaction', 'wallet_transaction_v2'], true) => TenantResource::TYPE_ORDER,
+            default                                                                 => null,
+        };
     }
 
     /**

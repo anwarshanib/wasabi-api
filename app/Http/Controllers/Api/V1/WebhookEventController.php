@@ -157,7 +157,9 @@ final class WebhookEventController extends Controller
             'page'              => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $query = WebhookEvent::query()->latest('created_at');
+        $query = WebhookEvent::query()
+            ->where('api_token_id', $request->attributes->get('api_token')->id)
+            ->latest('created_at');
 
         if (! empty($validated['category'])) {
             $query->where('category', $validated['category']);

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\TenantResource;
+use App\Services\TenantOwnershipService;
 use App\Services\WasabiCard\WalletService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +22,7 @@ final class WalletController extends Controller
 
     public function __construct(
         private readonly WalletService $walletService,
+        private readonly TenantOwnershipService $ownership,
     ) {}
 
     #[OA\Post(
@@ -96,6 +99,11 @@ final class WalletController extends Controller
         $validated['amount'] = (string) $validated['amount'];
 
         $result = $this->walletService->walletDeposit($validated);
+
+        if (! empty($result['orderNo'])) {
+            $tokenId = $request->attributes->get('api_token')->id;
+            $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], null);
+        }
 
         return $this->success($result);
     }
@@ -244,7 +252,16 @@ final class WalletController extends Controller
             'endTime'     => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        $ownedOrderNos = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_ORDER);
+
         $result = $this->walletService->walletDepositTransactions($validated);
+
+        $result['records'] = array_values(array_filter(
+            $result['records'] ?? [],
+            fn ($r) => in_array((string) ($r['orderNo'] ?? ''), $ownedOrderNos, true)
+        ));
+        $result['total'] = count($result['records']);
 
         return $this->success($result);
     }
@@ -363,6 +380,11 @@ final class WalletController extends Controller
 
         $result = $this->walletService->createWalletAddressV2($validated['coinKey']);
 
+        if (! empty($result['address'])) {
+            $tokenId = $request->attributes->get('api_token')->id;
+            $this->ownership->register($tokenId, TenantResource::TYPE_WALLET_ADDRESS, (string) $result['address'], null);
+        }
+
         return $this->success($result);
     }
 
@@ -404,9 +426,17 @@ final class WalletController extends Controller
             new OA\Response(response: 502, description: 'Upstream Wasabi API error',  content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ]
     )]
-    public function walletAddressListV2(): JsonResponse
+    public function walletAddressListV2(Request $request): JsonResponse
     {
+        $tokenId = $request->attributes->get('api_token')->id;
+        $ownedAddresses = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_WALLET_ADDRESS);
+
         $result = $this->walletService->walletAddressListV2();
+
+        $result = array_values(array_filter(
+            $result ?? [],
+            fn ($r) => in_array((string) ($r['address'] ?? ''), $ownedAddresses, true)
+        ));
 
         return $this->success($result);
     }
@@ -510,7 +540,19 @@ final class WalletController extends Controller
             'endTime'            => ['nullable', 'integer'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        $ownedAddresses = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_WALLET_ADDRESS);
+
         $result = $this->walletService->walletTransactionHistoryV2($validated);
+
+        $result['records'] = array_values(array_filter(
+            $result['records'] ?? [],
+            function ($r) use ($ownedAddresses) {
+                return in_array((string) ($r['destinationAddress'] ?? ''), $ownedAddresses, true)
+                    || in_array((string) ($r['sourceAddress'] ?? ''), $ownedAddresses, true);
+            }
+        ));
+        $result['total'] = count($result['records']);
 
         return $this->success($result);
     }

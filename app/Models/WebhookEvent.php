@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Stores every inbound Wasabi Card webhook event.
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * Events are stored here so third-party clients can poll for final results.
  *
  * @property int              $id
+ * @property int|null         $api_token_id       Tenant that owns the resource that triggered this event
  * @property string|null      $request_id         X-WSB-REQUEST-ID header — used for idempotency
  * @property string           $category           X-WSB-CATEGORY  e.g. card_holder, card_transaction
  * @property string|null      $reference_id       Extracted entity ID: holderId, tradeNo, orderNo, or cardNo
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Model;
 final class WebhookEvent extends Model
 {
     protected $fillable = [
+        'api_token_id',
         'request_id',
         'category',
         'reference_id',
@@ -34,6 +37,11 @@ final class WebhookEvent extends Model
         'payload',
         'signature_verified',
     ];
+
+    public function apiToken(): BelongsTo
+    {
+        return $this->belongsTo(ApiToken::class);
+    }
 
     protected $casts = [
         'payload'            => 'array',

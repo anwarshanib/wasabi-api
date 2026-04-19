@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\TenantResource;
+use App\Services\TenantOwnershipService;
 use App\Services\WasabiCard\CardholderService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +22,7 @@ final class CardholderController extends Controller
 
     public function __construct(
         private readonly CardholderService $cardholderService,
+        private readonly TenantOwnershipService $ownership,
     ) {}
 
     #[OA\Post(
@@ -132,7 +135,7 @@ final class CardholderController extends Controller
         $validated = $request->validate([
             'merchantOrderNo' => ['required', 'string', 'min:20', 'max:40'],
             'cardTypeId'      => ['required', 'integer'],
-            'areaCode'        => ['required', 'string', 'min:2', 'max:5'],
+            'areaCode'        => ['required', 'string', 'min:1', 'max:5'],
             'mobile'          => ['required', 'string', 'min:5', 'max:20'],
             'email'           => ['required', 'string', 'email', 'max:50'],
             'firstName'       => ['required', 'string', 'min:2', 'max:32', 'regex:/^[A-Za-z\s]+$/'],
@@ -146,6 +149,11 @@ final class CardholderController extends Controller
         ]);
 
         $result = $this->cardholderService->createCardholderDeprecated($validated);
+
+        if (! empty($result['holderId'])) {
+            $tokenId = $request->attributes->get('api_token')->id;
+            $this->ownership->register($tokenId, TenantResource::TYPE_CARDHOLDER, (string) $result['holderId'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -215,7 +223,7 @@ final class CardholderController extends Controller
     {
         $validated = $request->validate([
             'holderId'    => ['required', 'integer'],
-            'areaCode'    => ['required', 'string', 'min:2', 'max:5'],
+            'areaCode'    => ['required', 'string', 'min:1', 'max:5'],
             'mobile'      => ['required', 'string', 'min:5', 'max:20'],
             'email'       => ['required', 'string', 'email', 'max:50'],
             'firstName'   => ['required', 'string', 'min:2', 'max:32', 'regex:/^[A-Za-z\s]+$/'],
@@ -227,6 +235,11 @@ final class CardholderController extends Controller
             'address'     => ['required', 'string', 'min:2', 'max:40', 'regex:/^[A-Za-z0-9\- ]+$/'],
             'postCode'    => ['required', 'string', 'min:2', 'max:15', 'regex:/^[a-zA-Z0-9]{2,15}$/'],
         ]);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARDHOLDER, (string) $validated['holderId'])) {
+            return $deny;
+        }
 
         $result = $this->cardholderService->updateCardholderDeprecated($validated);
 
@@ -323,7 +336,7 @@ final class CardholderController extends Controller
             'cardHolderModel'       => ['required', 'string', 'in:B2B,B2C'],
             'merchantOrderNo'       => ['required', 'string', 'min:20', 'max:40'],
             'cardTypeId'            => ['required', 'integer'],
-            'areaCode'              => ['required', 'string', 'min:2', 'max:5'],
+            'areaCode'              => ['required', 'string', 'min:1', 'max:5'],
             'mobile'                => ['required', 'string', 'min:5', 'max:20'],
             'email'                 => ['required', 'string', 'email', 'max:50'],
             'firstName'             => ['required', 'string', 'min:2', 'max:32', 'regex:/^[A-Za-z\s]+$/'],
@@ -354,6 +367,11 @@ final class CardholderController extends Controller
         ]);
 
         $result = $this->cardholderService->createCardholderV2($validated);
+
+        if (! empty($result['holderId'])) {
+            $tokenId = $request->attributes->get('api_token')->id;
+            $this->ownership->register($tokenId, TenantResource::TYPE_CARDHOLDER, (string) $result['holderId'], $validated['merchantOrderNo']);
+        }
 
         return $this->success($result);
     }
@@ -446,7 +464,7 @@ final class CardholderController extends Controller
         $validated = $request->validate([
             'cardHolderModel'       => ['required', 'string', 'in:B2B,B2C'],
             'holderId'              => ['required', 'integer'],
-            'areaCode'              => ['required', 'string', 'min:2', 'max:5'],
+            'areaCode'              => ['required', 'string', 'min:1', 'max:5'],
             'mobile'                => ['required', 'string', 'min:5', 'max:20'],
             'email'                 => ['required', 'string', 'email', 'max:50'],
             'firstName'             => ['required', 'string', 'min:2', 'max:32', 'regex:/^[A-Za-z\s]+$/'],
@@ -475,6 +493,11 @@ final class CardholderController extends Controller
             'kycVerification.provider'    => ['required_with:kycVerification', 'nullable', 'string'],
             'kycVerification.referenceId' => ['required_with:kycVerification', 'nullable', 'string'],
         ]);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARDHOLDER, (string) $validated['holderId'])) {
+            return $deny;
+        }
 
         $result = $this->cardholderService->updateCardholderV2($validated);
 
@@ -572,7 +595,16 @@ final class CardholderController extends Controller
             'merchantOrderNo' => ['nullable', 'string'],
         ]);
 
+        $tokenId = $request->attributes->get('api_token')->id;
+        $ownedIds = $this->ownership->ownedIds($tokenId, TenantResource::TYPE_CARDHOLDER);
+
         $result = $this->cardholderService->cardholderList($validated);
+
+        $result['records'] = array_values(array_filter(
+            $result['records'] ?? [],
+            fn ($r) => in_array((string) ($r['holderId'] ?? ''), $ownedIds, true)
+        ));
+        $result['total'] = count($result['records']);
 
         return $this->success($result);
     }
@@ -634,6 +666,11 @@ final class CardholderController extends Controller
             'merchantOrderNo' => ['required', 'string'],
             'email'           => ['required', 'string', 'email', 'max:50'],
         ]);
+
+        $tokenId = $request->attributes->get('api_token')->id;
+        if ($deny = $this->ownership->deny($tokenId, TenantResource::TYPE_CARDHOLDER, (string) $validated['holderId'])) {
+            return $deny;
+        }
 
         $result = $this->cardholderService->updateCardholderEmail($validated);
 
