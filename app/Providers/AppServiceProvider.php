@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force the URL generator to use APP_URL as the root.
+        // This is required for the sandbox deployment where requests arrive
+        // at /sandbox/ but REQUEST_URI is stripped — without this, route()
+        // and url() produce https://wasabi.alphalinx.top/... instead of
+        // https://wasabi.alphalinx.top/sandbox/...
+        URL::forceRootUrl(config('app.url'));
+
         /*
         |----------------------------------------------------------------------
         | Rate Limiter — "client"

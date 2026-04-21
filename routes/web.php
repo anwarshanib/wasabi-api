@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::redirect('/', '/docs/guide');
+Route::get('/', fn () => redirect()->route('docs.guide'));
 
 /*
 |--------------------------------------------------------------------------
@@ -52,4 +52,65 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             Route::delete('{token}',     [TokenController::class, 'destroy'])->name('destroy');
         });
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| TEMPORARY SETUP ROUTE — DELETE AFTER FIRST USE
+|--------------------------------------------------------------------------
+| Visit: https://wasabi.alphalinx.top/setup-run-x9k2m7
+| IMPORTANT: Delete this route immediately after migrations complete.
+*/
+Route::get('/setup-run-x9k2m7', function () {
+    $secret = request('secret');
+
+    if ($secret !== env('SETUP_SECRET')) {
+        abort(403, 'Forbidden');
+    }
+
+    $output = [];
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        $output[] = '✅ config:clear done';
+    } catch (\Throwable $e) {
+        $output[] = '❌ config:clear failed: ' . $e->getMessage();
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        $output[] = '✅ route:clear done';
+    } catch (\Throwable $e) {
+        $output[] = '❌ route:clear failed: ' . $e->getMessage();
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        $output[] = '✅ view:clear done';
+    } catch (\Throwable $e) {
+        $output[] = '❌ view:clear failed: ' . $e->getMessage();
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output[] = '✅ migrate: ' . trim(\Illuminate\Support\Facades\Artisan::output());
+    } catch (\Throwable $e) {
+        $output[] = '❌ migrate failed: ' . $e->getMessage();
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('config:cache');
+        $output[] = '✅ config:cache done — APP_URL = ' . config('app.url');
+    } catch (\Throwable $e) {
+        $output[] = '❌ config:cache failed: ' . $e->getMessage();
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('route:cache');
+        $output[] = '✅ route:cache done';
+    } catch (\Throwable $e) {
+        $output[] = '❌ route:cache failed: ' . $e->getMessage();
+    }
+
+    return '<pre style="font-family:monospace;padding:20px">' . implode("\n", $output) . "\n\n⚠️  DELETE THIS ROUTE FROM routes/web.php NOW</pre>";
 });

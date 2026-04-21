@@ -38,7 +38,7 @@
             <div class="form-group">
                 <label for="description">Description</label>
                 <textarea id="description" name="description" rows="3"
-                          placeholder="e.g. Sandbox access only — card APIs" maxlength="255"
+                          placeholder="e.g. Enter description" maxlength="255"
                           style="resize:vertical">{{ old('description') }}</textarea>
                 <div class="form-hint">Optional notes for your records</div>
                 @error('description') <div class="error-msg">{{ $message }}</div> @enderror

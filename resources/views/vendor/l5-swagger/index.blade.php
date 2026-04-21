@@ -144,6 +144,15 @@
                 return request;
             },
 
+            responseInterceptor: function(response) {
+                // Patch the OpenAPI server URL so Swagger UI sends requests
+                // to the correct base (live or sandbox) based on APP_URL.
+                if (response.body && response.body.servers) {
+                    response.body.servers = [{ url: '{{ rtrim(config("app.url"), "/") }}', description: 'Current environment' }];
+                }
+                return response;
+            },
+
             presets: [
                 SwaggerUIBundle.presets.apis,
                 SwaggerUIStandalonePreset

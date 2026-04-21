@@ -210,10 +210,10 @@
         <a href="#poll-events">Polling Events</a>
 
         <div class="nav-section">Interactive</div>
-        <a href="/api/documentation" target="_blank">Swagger UI ↗</a>
+        <a href="{{ url('/api/documentation') }}" target="_blank">Swagger UI ↗</a>
     </nav>
     <div class="sidebar-footer">
-        <a href="/api/documentation" target="_blank">🔗 Try in Swagger UI</a>
+        <a href="{{ url('/api/documentation') }}" target="_blank">🔗 Try in Swagger UI</a>
     </div>
 </aside>
 
@@ -225,7 +225,7 @@
         <h1>Wasabi <span>Card</span> API</h1>
         <p>A complete REST API integration layer for card issuance, cardholder management, wallet operations, and real-time webhook events.</p>
         <div class="hero-links">
-            <a href="/api/documentation" target="_blank" class="btn btn-green">Open Interactive Docs ↗</a>
+            <a href="{{ url('/api/documentation') }}" target="_blank" class="btn btn-green">Open Interactive Docs ↗</a>
             <a href="#authentication" class="btn btn-outline">Quick Start →</a>
         </div>
     </div>
@@ -639,7 +639,7 @@ attempt 4: wait 4s</pre>
 
     <div style="margin-top:64px; padding:24px; background:#fff; border-radius:10px; border:1px solid var(--border); text-align:center; color:var(--muted); font-size:13px;">
         For full interactive API reference with request/response schemas and a live testing console, visit
-        <a href="/api/documentation" style="color:var(--green); font-weight:600">the Swagger UI →</a>
+        <a href="{{ url('/api/documentation') }}" style="color:var(--green); font-weight:600">the Swagger UI →</a>
     </div>
 
 </main>

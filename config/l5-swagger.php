@@ -67,7 +67,7 @@ return [
             'middleware' => [
                 'api' => [],
                 'asset' => [],
-                'docs' => [],
+                'docs' => [\App\Http\Middleware\PatchSwaggerServer::class],
                 'oauth2_callback' => [],
             ],
 
