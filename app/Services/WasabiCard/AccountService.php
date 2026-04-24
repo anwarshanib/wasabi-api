@@ -17,7 +17,7 @@ namespace App\Services\WasabiCard;
  *   POST /merchant/core/mcb/account/create
  *   POST /merchant/core/mcb/account/transfer
  */
-final class AccountService
+class AccountService
 {
     public function __construct(
         private readonly WasabiCardClient $client,

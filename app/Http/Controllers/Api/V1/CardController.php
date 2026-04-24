@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\TenantResource;
+use App\Services\ClientBalanceService;
 use App\Services\TenantOwnershipService;
 use App\Services\WasabiCard\CardService;
 use App\Traits\ApiResponse;
@@ -23,6 +24,7 @@ final class CardController extends Controller
     public function __construct(
         private readonly CardService $cardService,
         private readonly TenantOwnershipService $ownership,
+        private readonly ClientBalanceService $clientBalance,
     ) {}
 
     #[OA\Post(
@@ -234,15 +236,49 @@ final class CardController extends Controller
             $validated['amount'] = (string) $validated['amount'];
         }
 
-        $result = $this->cardService->createCardDeprecated($validated);
+        $tokenId    = $request->attributes->get('api_token')->id;
+        $cardAmount = (float) ($validated['amount'] ?? 0);
 
-        $tokenId = $request->attributes->get('api_token')->id;
+        // Fetch Wasabi card type to include BIN fee + deposit processing fee in reservation
+        $cardType        = $this->cardService->getCardTypeById((int) $validated['cardTypeId']);
+        $wasabiBinFee    = (float) ($cardType['cardPrice'] ?? 0);
+        $feeRate         = (float) ($cardType['rechargeFeeRate'] ?? 0);
+        $fixedFee        = (float) ($cardType['rechargeFixedFee'] ?? 0);
+        // If amount not set, use minimum deposit to estimate processing fee
+        $effectiveAmount = $cardAmount > 0 ? $cardAmount : (float) ($cardType['depositAmountMinQuotaForActiveCard'] ?? 0);
+        $wasabiProcFee   = round($effectiveAmount * $feeRate / 100 + $fixedFee, 4);
+
+        // Reserve balance (deposit + Wasabi BIN fee + Wasabi processing fee + platform fee)
+        try {
+            $reserved = $this->clientBalance->reserveCardCreate(
+                $tokenId,
+                $validated['merchantOrderNo'],
+                $cardAmount,
+                $wasabiBinFee,
+                $wasabiProcFee,
+            );
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        try {
+            $result = $this->cardService->createCardDeprecated($validated);
+        } catch (\Throwable $e) {
+            // Wasabi call failed — refund the reserved balance immediately
+            $ids = array_filter(array_values($reserved));
+            $this->clientBalance->reversePending(...$ids);
+            throw $e;
+        }
+
         if (! empty($result['cardNo'])) {
             $this->ownership->register($tokenId, TenantResource::TYPE_CARD, (string) $result['cardNo'], $validated['merchantOrderNo']);
         }
         if (! empty($result['orderNo'])) {
             $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
         }
+
+        // Fee is collected only on confirmed success via the card_transaction webhook.
+        // Collecting here would charge the fee even if Wasabi later rejects the card.
 
         return $this->success($result);
     }
@@ -357,15 +393,47 @@ final class CardController extends Controller
 
         $validated['amount'] = (string) $validated['amount'];
 
-        $result = $this->cardService->createCardV2($validated);
+        $tokenId    = $request->attributes->get('api_token')->id;
+        $cardAmount = (float) $validated['amount'];
 
-        $tokenId = $request->attributes->get('api_token')->id;
+        // Fetch Wasabi card type to include BIN fee + deposit processing fee in reservation
+        $cardType      = $this->cardService->getCardTypeById((int) $validated['cardTypeId']);
+        $wasabiBinFee  = (float) ($cardType['cardPrice'] ?? 0);
+        $feeRate       = (float) ($cardType['rechargeFeeRate'] ?? 0);
+        $fixedFee      = (float) ($cardType['rechargeFixedFee'] ?? 0);
+        $wasabiProcFee = round($cardAmount * $feeRate / 100 + $fixedFee, 4);
+
+        // Reserve balance (deposit + Wasabi BIN fee + Wasabi processing fee + platform fee)
+        try {
+            $reserved = $this->clientBalance->reserveCardCreate(
+                $tokenId,
+                $validated['merchantOrderNo'],
+                $cardAmount,
+                $wasabiBinFee,
+                $wasabiProcFee,
+            );
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        try {
+            $result = $this->cardService->createCardV2($validated);
+        } catch (\Throwable $e) {
+            // Wasabi call failed — refund the reserved balance immediately
+            $ids = array_filter(array_values($reserved));
+            $this->clientBalance->reversePending(...$ids);
+            throw $e;
+        }
+
         if (! empty($result['cardNo'])) {
             $this->ownership->register($tokenId, TenantResource::TYPE_CARD, (string) $result['cardNo'], $validated['merchantOrderNo']);
         }
         if (! empty($result['orderNo'])) {
             $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);
         }
+
+        // Fee is collected only on confirmed success via the card_transaction webhook.
+        // Collecting here would charge the fee even if Wasabi later rejects the card.
 
         return $this->success($result);
     }
@@ -1272,7 +1340,25 @@ final class CardController extends Controller
             return $deny;
         }
 
-        $result = $this->cardService->depositCard($validated);
+        $amount = (float) $validated['amount'];
+
+        // Reserve client balance before calling Wasabi
+        try {
+            $txId = $this->clientBalance->reserveCardDeposit(
+                $tokenId,
+                $validated['merchantOrderNo'],
+                $amount,
+            );
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        try {
+            $result = $this->cardService->depositCard($validated);
+        } catch (\Throwable $e) {
+            $this->clientBalance->reversePending($txId);
+            throw $e;
+        }
 
         if (! empty($result['orderNo'])) {
             $this->ownership->register($tokenId, TenantResource::TYPE_ORDER, (string) $result['orderNo'], $validated['merchantOrderNo']);

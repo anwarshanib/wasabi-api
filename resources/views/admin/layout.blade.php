@@ -103,7 +103,9 @@
 <nav class="nav">
     <a href="{{ route('admin.tokens.index') }}" class="nav-brand">Wasabi <span>Admin</span></a>
     <div class="nav-right">
-        <span style="color:#9ca3af">API Token Manager</span>
+        <a href="{{ route('admin.tokens.index') }}">Tokens</a>
+        <a href="{{ route('admin.fees.index') }}">Fees</a>
+        <a href="{{ route('admin.clients.balances') }}">Balances</a>
         <form method="POST" action="{{ route('admin.logout') }}" style="margin:0">
             @csrf
             <button type="submit" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:13px;padding:0">Logout</button>

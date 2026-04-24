@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 
@@ -92,5 +93,10 @@ final class ApiToken extends Model
         return self::where('token_hash', hash('sha256', $rawKey))
             ->where('is_active', true)
             ->first();
+    }
+
+    public function clientBalance(): HasOne
+    {
+        return $this->hasOne(ClientBalance::class);
     }
 }

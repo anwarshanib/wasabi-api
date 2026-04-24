@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\ClientBalanceController;
+use App\Http\Controllers\Admin\FeeController;
 use App\Http\Controllers\Admin\TokenController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +52,20 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             Route::post('{token}/toggle',[TokenController::class, 'toggle'])->name('toggle');
             Route::post('{token}/reveal',[TokenController::class, 'reveal'])->name('reveal');
             Route::delete('{token}',     [TokenController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('fees')->name('fees.')->group(function (): void {
+            Route::get('/',                    [FeeController::class, 'index'])->name('index');
+            Route::post('settings',            [FeeController::class, 'updateSettings'])->name('settings');
+            Route::post('wallet/create',       [FeeController::class, 'createWallet'])->name('wallet.create');
+            Route::post('wallet/source',       [FeeController::class, 'setSourceAccount'])->name('wallet.source');
+            Route::post('wallet/destination',  [FeeController::class, 'setDestinationAccount'])->name('wallet.destination');
+        });
+
+        Route::prefix('clients')->name('clients.')->group(function (): void {
+            Route::get('balances',                          [ClientBalanceController::class, 'index'])->name('balances');
+            Route::get('{token}/transactions',              [ClientBalanceController::class, 'transactions'])->name('transactions');
+            Route::get('{token}/transactions/export',       [ClientBalanceController::class, 'exportCsv'])->name('export');
         });
     });
 });

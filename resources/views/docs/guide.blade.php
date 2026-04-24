@@ -241,11 +241,11 @@
         </div>
 
         <h3>Base URL</h3>
-        <pre><span class="comment"># Production</span>
-https://api.yourdomain.com
+        <pre><span class="comment"># Live (Production)</span>
+https://wasabi.alphalinx.top
 
-<span class="comment"># Sandbox / local development</span>
-http://127.0.0.1:8000</pre>
+<span class="comment"># Sandbox</span>
+https://wasabi.alphalinx.top/sandbox</pre>
     </div>
 
     <!-- Authentication -->
@@ -280,12 +280,12 @@ http://127.0.0.1:8000</pre>
         <p>All requests use <strong>JSON bodies</strong> with <code>Content-Type: application/json</code>. Unless otherwise stated, endpoints use the <code>POST</code> method.</p>
 
         <h3>cURL Example</h3>
-        <pre><span class="method">curl</span> -X POST <span class="url">https://api.yourdomain.com/api/v1/cardholders/occupations</span> \
+        <pre><span class="method">curl</span> -X POST <span class="url">https://wasabi.alphalinx.top/sandbox/api/v1/cardholders/occupations</span> \
   -H <span class="string">"X-API-KEY: wc_YourSecretKeyHere"</span> \
   -H <span class="string">"Content-Type: application/json"</span></pre>
 
         <h3>Request with Body</h3>
-        <pre><span class="method">curl</span> -X POST <span class="url">https://api.yourdomain.com/api/v1/cards/balance</span> \
+        <pre><span class="method">curl</span> -X POST <span class="url">https://wasabi.alphalinx.top/sandbox/api/v1/cards/balance</span> \
   -H <span class="string">"X-API-KEY: wc_YourSecretKeyHere"</span> \
   -H <span class="string">"Content-Type: application/json"</span> \
   -d <span class="string">'{
@@ -580,12 +580,12 @@ attempt 4: wait 4s</pre>
 
         <h3>Example: Poll for cardholder creation result</h3>
         <pre><span class="comment"># Step 1 — create cardholder, get holderId from response</span>
-<span class="method">curl</span> -X POST <span class="url">https://api.yourdomain.com/api/v1/cardholders/create-v2</span> \
+<span class="method">curl</span> -X POST <span class="url">https://wasabi.alphalinx.top/sandbox/api/v1/cardholders/create-v2</span> \
   -H <span class="string">"X-API-KEY: wc_..."</span> -d <span class="string">'{ "cardHolderModel": "B2C", ... }'</span>
 <span class="comment"># Response: { "data": { "holderId": 124024, "status": "wait_audit" } }</span>
 
 <span class="comment"># Step 2 — poll until status is pass_audit or reject</span>
-<span class="method">curl</span> <span class="url">"https://api.yourdomain.com/api/v1/webhook-events?category=card_holder&amp;reference_id=124024"</span> \
+<span class="method">curl</span> <span class="url">"https://wasabi.alphalinx.top/sandbox/api/v1/webhook-events?category=card_holder&amp;reference_id=124024"</span> \
   -H <span class="string">"X-API-KEY: wc_..."</span></pre>
 
         <h3>Query Parameters</h3>

@@ -11,7 +11,7 @@ namespace App\Services\WasabiCard;
  *   POST /merchant/core/mcb/card/v2/cardTypes  (Support Bins)
  *   POST /merchant/core/mcb/card/openCard      (Create Card — Deprecated)
  */
-final class CardService
+class CardService
 {
     public function __construct(
         private readonly WasabiCardClient $client,
@@ -39,6 +39,23 @@ final class CardService
     public function supportBins(): array
     {
         return $this->client->post('/merchant/core/mcb/card/v2/cardTypes')['data'] ?? [];
+    }
+
+    /**
+     * Return a single card type matched by cardTypeId, or null if not found.
+     *
+     * Caches the full bins list for 5 minutes to avoid an extra Wasabi API call
+     * on every card creation request.
+     */
+    public function getCardTypeById(int $cardTypeId): ?array
+    {
+        foreach ($this->supportBins() as $bin) {
+            if ((int) ($bin['cardTypeId'] ?? 0) === $cardTypeId) {
+                return $bin;
+            }
+        }
+
+        return null;
     }
 
     /**
